@@ -106,9 +106,17 @@ function App() {
     
     setStrokes(prev => [...prev, stroke])
     
+    // Reduce stroke size to meet 4KB realtime limit by sampling points
+    const MAX_POINTS = 200
+    const sampleRate = stroke.points.length > MAX_POINTS ? Math.ceil(stroke.points.length / MAX_POINTS) : 1
+    const lightweightStroke = {
+      ...stroke,
+      points: stroke.points.filter((_, idx) => idx % sampleRate === 0)
+    }
+    
     // Broadcast to other users
     try {
-      await blink.realtime.publish('whiteboard-main', 'stroke', stroke)
+      await blink.realtime.publish('whiteboard-main', 'stroke', lightweightStroke)
     } catch (error) {
       console.error('Error publishing stroke:', error)
     }
